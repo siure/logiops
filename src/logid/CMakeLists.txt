@@ -118,3 +118,7 @@ message(STATUS "dbus system policy will be installed at ${DBUS_SYSTEM_POLICY_INS
 install(FILES ${CMAKE_BINARY_DIR}/pizza.pixl.LogiOps.conf
         DESTINATION ${DBUS_SYSTEM_POLICY_INSTALL_DIR}
         COMPONENT cp)
+
+if (BUILD_TESTING)
+    add_subdirectory(tests)
+endif ()
