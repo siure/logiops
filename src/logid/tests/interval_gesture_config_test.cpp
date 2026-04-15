@@ -1,4 +1,5 @@
 #include <Configuration.h>
+#include <util/log.h>
 
 #include <filesystem>
 #include <fstream>
@@ -10,6 +11,9 @@
 #include <variant>
 
 namespace fs = std::filesystem;
+
+// Standalone tests do not link the daemon entrypoint where this is normally defined.
+logid::LogLevel logid::global_loglevel = logid::INFO;
 
 namespace {
     struct TempFile {
