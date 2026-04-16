@@ -70,6 +70,14 @@ void IntervalGesture::move(int16_t axis) {
     if (!_config.interval.has_value())
         return;
 
+    const auto delay = _config.delay.value_or(0);
+    const bool cooldown_enabled = delay > 0;
+    const auto now = cooldown_enabled ? Clock::now() : Clock::time_point{};
+    if (cooldown_enabled && _next_action_time.has_value()
+        && now < _next_action_time.value()) {
+        return;
+    }
+
     const auto threshold =
             _config.threshold.value_or(defaults::gesture_threshold);
     _axis += axis;
@@ -78,17 +86,14 @@ void IntervalGesture::move(int16_t axis) {
 
     int32_t new_interval_count = (_axis - threshold) / _config.interval.value();
     if (new_interval_count > _interval_pass_count) {
-        const auto delay = _config.delay.value_or(0);
-        const bool cooldown_enabled = delay > 0;
-        const auto now = cooldown_enabled ? Clock::now() : Clock::time_point{};
-        const bool cooldown_expired = !cooldown_enabled
-                                      || !_next_action_time.has_value()
-                                      || now >= _next_action_time.value();
-        if (_action && cooldown_expired) {
+        if (_action) {
             _action->press();
             _action->release();
             if (cooldown_enabled) {
                 _next_action_time = now + std::chrono::milliseconds(delay);
+                _axis = threshold;
+                _interval_pass_count = 0;
+                return;
             } else {
                 _next_action_time.reset();
             }
